@@ -1,18 +1,19 @@
 from django.shortcuts import render
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .forms import UserRegisterForm
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
 
+from .models import TransactionRecord
 
 @login_required
 def home(request):
@@ -60,16 +61,28 @@ def user_logout(request):
     messages.info(request, "Logged out successfully!")
     return redirect('login')
 
-
 # ================= GLOBAL VARIABLES =================
 lr = None
 dt = None
+rf = None  # Random Forest
 scaler = None
 X_test_scaled = None
 y_test = None
 model_trained = False
 
 
+def preprocess_data(df):
+    """
+    Applies feature engineering:
+    1. amount_per_txn
+    2. is_night
+    3. high_amount_flag
+    """
+    df = df.copy()
+    df['amount_per_txn'] = df['amount'] / (df['transactions'] + 1)
+    df['is_night'] = df['hour'].apply(lambda x: 1 if x < 6 else 0)
+    df['high_amount_flag'] = (df['amount'] > 50000).astype(int)
+    return df
 
 
 def about(request):
@@ -77,11 +90,13 @@ def about(request):
 
 
 def report(request):
-    return render(request, 'core/report.html')
+    # Fetch all records, newest first
+    report_data = TransactionRecord.objects.all().order_by('-timestamp')
+    return render(request, 'core/report.html', {'report_data': report_data})
 
 
 def fraud_prediction(request):
-    global lr, dt, scaler, X_test_scaled, y_test, model_trained
+    global lr, dt, rf, scaler, X_test_scaled, y_test, model_trained
 
     context = {
         "result": None,
@@ -96,7 +111,12 @@ def fraud_prediction(request):
             try:
                 df = pd.read_csv(request.FILES["train_csv"])
 
-                X = df[["amount", "transactions", "hour"]]
+                # Feature Engineering
+                df = preprocess_data(df)
+
+                # Select Features (Update to include new ones)
+                features = ["amount", "transactions", "hour", "amount_per_txn", "is_night", "high_amount_flag"]
+                X = df[features]
                 y = df["fraud"]
 
                 scaler = StandardScaler()
@@ -106,16 +126,22 @@ def fraud_prediction(request):
                     X_scaled, y, test_size=0.2, random_state=42
                 )
 
+                # Logistic Regression
                 lr = LogisticRegression()
                 lr.fit(X_train, y_train)
 
+                # Decision Tree
                 dt = DecisionTreeClassifier()
                 dt.fit(X_train, y_train)
+
+                # Random Forest
+                rf = RandomForestClassifier(n_estimators=100, random_state=42)
+                rf.fit(X_train, y_train)
 
                 X_test_scaled = X_test
                 model_trained = True
 
-                context["message"] = "Model trained successfully"
+                context["message"] = "Models trained successfully (LR, DT, RF)"
 
             except Exception as e:
                 context["error"] = str(e)
@@ -127,45 +153,68 @@ def fraud_prediction(request):
                 transactions = int(request.POST.get("transactions"))
                 hour = int(request.POST.get("hour"))
 
+                # Create DataFrame for single user input
                 user_df = pd.DataFrame([{
                     "amount": amount,
                     "transactions": transactions,
                     "hour": hour
                 }])
 
-                user_scaled = scaler.transform(user_df)
+                # Apply same Feature Engineering
+                user_df = preprocess_data(user_df)
+                
+                features = ["amount", "transactions", "hour", "amount_per_txn", "is_night", "high_amount_flag"]
+                user_scaled = scaler.transform(user_df[features])
 
                 pred_lr = lr.predict(user_scaled)[0]
                 pred_dt = dt.predict(user_scaled)[0]
+                pred_rf = rf.predict(user_scaled)[0]
 
                 acc_lr = round(accuracy_score(y_test, lr.predict(X_test_scaled)), 2)
                 acc_dt = round(accuracy_score(y_test, dt.predict(X_test_scaled)), 2)
+                acc_rf = round(accuracy_score(y_test, rf.predict(X_test_scaled)), 2)
 
-                # ===== Risk Score =====
+                # ===== Risk Score calculation (Simplified/Heuristic) =====
                 risk_score = 0
-                if amount > 1000:
-                    risk_score += 0.3
-                if transactions > 2:
-                    risk_score += 0.2
-                if hour >= 22 or hour <= 5:
-                    risk_score += 0.3
+                if amount > 1000: risk_score += 0.3
+                if transactions > 2: risk_score += 0.2
+                if hour >= 22 or hour <= 5: risk_score += 0.3
+                
+                # Boost risk if RF predicts fraud (it's usually robust)
+                if pred_rf == 1: risk_score += 0.2
+                
                 risk_score = min(risk_score, 1.0)
 
                 if risk_score >= 0.7:
                     risk_level = "High Risk"
                     final_decision = "Fraudulent"
+                    fraud_result = "Fraud"
                 elif risk_score >= 0.4:
                     risk_level = "Medium Risk"
                     final_decision = "Suspicious"
+                    fraud_result = "Normal" # Or Suspicious
                 else:
                     risk_level = "Low Risk"
                     final_decision = "Normal"
+                    fraud_result = "Normal"
+
+                # === SAVE TO DB ===
+                TransactionRecord.objects.create(
+                    amount=amount,
+                    transactions=transactions,
+                    hour=hour,
+                    fraud_result=fraud_result, # Simple status
+                    risk_level=risk_level,
+                    risk_score=risk_score
+                )
 
                 context["result"] = {
                     "prediction_logistic": "Fraud" if pred_lr == 1 else "Normal",
                     "accuracy_logistic": acc_lr,
                     "prediction_dt": "Fraud" if pred_dt == 1 else "Normal",
                     "accuracy_dt": acc_dt,
+                    "prediction_rf": "Fraud" if pred_rf == 1 else "Normal",
+                    "accuracy_rf": acc_rf,
                     "risk_level": risk_level,
                     "final_decision": final_decision,
                     "risk_score": risk_score
@@ -180,6 +229,8 @@ def fraud_prediction(request):
     return render(request, "core/predict.html", context)
 
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 
@@ -305,5 +356,70 @@ def fraud_analysis(request):
         context["prob_chart"] = "fraud_prob.png"
         context["analysis_done"] = True
 
+        # ===== FRAUD RECORDS & EXPORT =====
+        # Filter only fraud records
+        fraud_df = user_df[user_df["predicted_fraud"] == 1].copy()
+        
+        # Convert to list of dicts for the template
+        fraud_records = fraud_df.to_dict(orient="records")
+        
+        # Round probability and Calculate Risk Level
+        for record in fraud_records:
+            # Rounding
+            record['fraud_prob'] = round(record['fraud_prob'], 4)
+            
+            # Risk Calc
+            amount = record.get('amount', 0)
+            transactions = record.get('transactions', 0)
+            hour = record.get('hour', 0)
+            
+            risk_score = 0
+            if amount > 1000: risk_score += 0.3
+            if transactions > 2: risk_score += 0.2
+            if hour >= 22 or hour <= 5: risk_score += 0.3
+            risk_score = min(risk_score, 1.0)
+
+            if risk_score >= 0.7:
+                record['risk_level'] = "High"
+            elif risk_score >= 0.4:
+                record['risk_level'] = "Medium"
+            else:
+                record['risk_level'] = "Low"
+
+        context["fraud_records"] = fraud_records
+
+        # Store in session for CSV export
+        request.session['fraud_data'] = fraud_records
+
     return render(request, "core/fraud_analysis.html", context)
+
+
+from django.http import HttpResponse
+import csv
+
+def export_fraud_csv(request):
+    """
+    Exports the fraud data stored in session to a CSV file.
+    """
+    fraud_data = request.session.get('fraud_data', [])
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="fraud_detected.csv"'
+
+    writer = csv.writer(response)
+    # Write header
+    writer.writerow(['Amount', 'Transactions', 'Hour', 'Fraud Probability', 'Risk Level'])
+
+    # Write data
+    for row in fraud_data:
+        writer.writerow([
+            row.get('amount'), 
+            row.get('transactions'), 
+            row.get('hour'), 
+            row.get('fraud_prob'),
+            row.get('risk_level')
+        ])
+
+    return response
+
 

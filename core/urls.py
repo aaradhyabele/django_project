@@ -13,6 +13,7 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     path('report/', views.report, name='report'),
     path('fraud_analysis/', views.fraud_analysis, name='fraud_analysis'),
+    path('export_fraud_csv/', views.export_fraud_csv, name='export_fraud_csv'),
 
     # Registration
     path('register/', views.register, name='register'),

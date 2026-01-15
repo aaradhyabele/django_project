@@ -1,196 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Fraud Prediction</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #e0f7fa, #f1f8e9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+{% extends 'core/base.html' %}
+{% block title %}Fraud Prediction | Fraud Detection System{% endblock %}
 
-        .box {
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            gap: 16px;
-            background: white;
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-
-        h2 {
-            margin-bottom: 25px;
-            color: #00796b;
-            text-align: center;
-        }
-
-        .input-group {
-            display: flex;
-            align-items: center;
-        }
-
-        .input-group .icon {
-            padding: 10px;
-            background: #f0f0f0;
-            border: 1px solid #ccc;
-            border-right: none;
-            border-radius: 6px 0 0 6px;
-            flex-shrink: 0;
-        }
-
-        .input-group input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 0 6px 6px 0;
-        }
-
-        button.btn-primary {
-            width: 100%;
-            padding: 12px;
-            background: #00796b;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.2s ease;
-        }
-
-        button.btn-primary:hover {
-            background: #004d40;
-            transform: translateY(-2px);
-        }
-
-        .result {
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: 500;
-            margin-top: 10px;
-        }
-
-        .result.fraud {
-            background: #ffe5e5;
-            color: #b30000;
-            border-left: 6px solid #ff4d4d;
-            box-shadow: 0 0 12px rgba(255, 77, 77, 0.6);
-        }
-
-        .result.normal {
-            background: #e6ffea;
-            color: #006600;
-            border-left: 6px solid #2ecc71;
-            box-shadow: 0 0 12px rgba(46, 204, 113, 0.6);
-        }
-
-        .result.warning {
-            background: #fff3cd;
-            color: #856404;
-            border-left: 5px solid #ffc107;
-        }
-
-        .result.info {
-            background: #e7f3ff;
-            color: #004085;
-            border-left: 5px solid #17a2b8;
-        }
-
-        progress {
-            width: 100%;
-            height: 20px;
-            margin-top: 8px;
-            border-radius: 5px;
-        }
-
-        .risk-reason-box {
-            background: #fff3cd;
-            color: #856404;
-            border-left: 6px solid #ffc107;
-            border-radius: 8px;
-            padding: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            font-size: 14px;
-            margin-top: 20px;
-        }
-
-        .risk-reason-box h4 {
-            margin-top: 0;
-            margin-bottom: 8px;
-        }
-
-        .risk-reason-box ul {
-            padding-left: 18px;
-            margin: 0 0 10px 0;
-        }
-
-        .risk-reason-box li {
-            margin-bottom: 6px;
-        }
-
-        .btn-back {
-            display: inline-block;
-            padding: 10px 16px;
-            background: #007bff;
-            color: white;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: background 0.3s, transform 0.2s ease;
-        }
-
-        .btn-back:hover {
-            background: #0056b3;
-            transform: translateY(-2px);
-        }
-
-        /* ✅ Added success message style (same visual language) */
-        .success {
-            background: #e6ffea;
-            color: #006600;
-            border-left: 6px solid #2ecc71;
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            text-align: center;
-            box-shadow: 0 0 12px rgba(46, 204, 113, 0.6);
-        }
-
-        .divider {
-            height: 1px;
-            background: #ddd;
-            margin: 10px 0;
-        }
-    </style>
-</head>
-<body>
-
+{% block content %}
 <div class="box">
 
-    <!-- ✅ TRAIN MODEL SECTION (ADDED, NO OTHER CODE TOUCHED) -->
+    <!-- Train Model Section -->
     <h2>🧠 Train Fraud Detection Model</h2>
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <label><b>Upload Training Dataset (CSV)</b></label>
-        <input type="file" name="train_csv" required>
-        <button type="submit" class="btn-primary">Train Model</button>
+        <div class="form-group">
+            <label><b>Upload Training Dataset (CSV)</b></label>
+            <input type="file" name="train_csv" required>
+        </div>
+        <button type="submit" class="button">Train Model</button>
     </form>
 
     {% if message %}
-        <div class="success">✅ {{ message }}</div>
+    <div class="success-message">✅ {{ message }}</div>
     {% endif %}
 
     <div class="divider"></div>
 
-    <!-- 🔍 EXISTING CODE BELOW (UNCHANGED) -->
-<h2>🔍 Fraud Prediction...!</h2>
+    <!-- Prediction Section -->
+    <h2>🔍 Fraud Prediction...!</h2>
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -210,47 +43,48 @@
             <input type="number" name="hour" placeholder="Hour (0–23)" min="0" max="23" required>
         </div>
 
-        <button type="submit" class="btn-primary">Analyze Transaction</button>
+        <button type="submit" class="button">Analyze Transaction</button>
     </form>
 
     {% if result %}
-        <div class="result {% if result.prediction_logistic == 'Fraud' %}fraud{% else %}normal{% endif %}">
-            🔹 Logistic Regression: <b>{{ result.prediction_logistic }}</b> 
-            (Accuracy: {{ result.accuracy_logistic }})
-        </div>
+    <div class="result {% if result.prediction_logistic == 'Fraud' %}fraud{% else %}normal{% endif %}">
+        🔹 Logistic Regression: <b>{{ result.prediction_logistic }}</b>
+        (Accuracy: {{ result.accuracy_logistic }})
+    </div>
 
-        <div class="result {% if result.prediction_dt == 'Fraud' %}fraud{% else %}normal{% endif %}">
-            🔹 Decision Tree: <b>{{ result.prediction_dt }}</b> 
-            (Accuracy: {{ result.accuracy_dt }})
-        </div>
+    <div class="result {% if result.prediction_dt == 'Fraud' %}fraud{% else %}normal{% endif %}">
+        🔹 Decision Tree: <b>{{ result.prediction_dt }}</b>
+        (Accuracy: {{ result.accuracy_dt }})
+    </div>
 
-        <div class="result {% if result.risk_level == 'High Risk' %}fraud
+    <div class="result {% if result.prediction_rf == 'Fraud' %}fraud{% else %}normal{% endif %}">
+        🔹 Random Forest: <b>{{ result.prediction_rf }}</b>
+        (Accuracy: {{ result.accuracy_rf }})
+    </div>
+
+    <div class="result {% if result.risk_level == 'High Risk' %}fraud
                                {% elif result.risk_level == 'Medium Risk' %}warning
                                {% else %}normal{% endif %}">
-            🧠 <b>Final Risk Assessment</b><br>
-            Decision: <b>{{ result.final_decision }}</b><br>
-            Risk Level: <b>{{ result.risk_level }}</b><br>
-            Risk Score: <b>{{ result.risk_score }}</b>
-        </div>
+        🧠 <b>Final Risk Assessment</b><br>
+        Decision: <b>{{ result.final_decision }}</b><br>
+        Risk Level: <b>{{ result.risk_level }}</b><br>
+        Risk Score: <b>{{ result.risk_score }}</b>
+    </div>
 
-        <label><b>Risk Meter</b></label>
-        <progress value="{{ result.risk_score }}" max="1"></progress>
+    <label style="margin-top: 1rem;"><b>Risk Meter</b></label>
+    <progress value="{{ result.risk_score }}" max="1" style="width: 100%; height: 20px; border-radius: 8px;"></progress>
 
-        <div class="risk-reason-box">
-            <h4>🔍 Reason for Risk</h4>
-            <ul>
-                <li>Transaction amount is higher than usual</li>
-                <li>Multiple transactions detected</li>
-                <li>Late-night transaction hour</li>
-            </ul>
-            <a href="{% url 'home' %}" class="btn-back">⬅ Back to Homepage</a>
-        </div>
+    <div class="risk-reason-box">
+        <h4>🔍 Reason for Risk</h4>
+        <ul>
+            <li>Transaction amount is higher than usual</li>
+            <li>Multiple transactions detected</li>
+            <li>Late-night transaction hour</li>
+        </ul>
+    </div>
+
+    <a href="{% url 'home' %}" class="button secondary" style="margin-top: 1.5rem;">⬅ Back to Homepage</a>
     {% endif %}
 
 </div>
-
-</body>
-</html>
-
-
-
+{% endblock %}

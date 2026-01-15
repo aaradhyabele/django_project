@@ -1,149 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Fraud Reports</title>
+{% extends 'core/base.html' %}
+{% block title %}Fraud Reports | Fraud Detection System{% endblock %}
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #cce7ff, #e8f5e9);
-            min-height: 100vh;
-
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 60px 15px;
-        }
-
-        .box {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 35px;
-            max-width: 850px;
-            width: 100%;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            animation: fadeSlide 0.8s ease;
-        }
-
-        @keyframes fadeSlide {
-            from {
-                opacity: 0;
-                transform: translateY(25px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        h2 {
-            margin: 0 0 25px;
-            color: #004d40;
-            text-align: center;
-            letter-spacing: 0.5px;
-        }
-
-        /* Table styling */
-        .table-wrapper {
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        th, td {
-            padding: 14px 12px;
-            text-align: center;
-            font-size: 15px;
-        }
-
-        th {
-            background: linear-gradient(135deg, #00796b, #004d40);
-            color: white;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f7fdfc;
-        }
-
-        tr:nth-child(odd) {
-            background-color: #ffffff;
-        }
-
-        tr:hover {
-            background-color: #e0f2f1;
-            transition: background 0.2s ease;
-        }
-
-        td {
-            border-bottom: 1px solid #ddd;
-        }
-
-        /* Fraud / Normal badge */
-        .badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .badge.fraud {
-            background: #ffe5e5;
-            color: #b30000;
-            border: 1px solid #ff4d4d;
-        }
-
-        .badge.normal {
-            background: #e6ffea;
-            color: #006600;
-            border: 1px solid #2ecc71;
-        }
-
-        /* Back button */
-        .button {
-            display: inline-block;
-            margin-top: 25px;
-            padding: 12px 22px;
-            background: linear-gradient(135deg, #1976d2, #0d47a1);
-            color: white;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 22px rgba(25, 118, 210, 0.4);
-        }
-
-        /* Small subtitle */
-        .subtitle {
-            text-align: center;
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="box">
+{% block content %}
+<div class="box wide">
     <h2>📊 Fraud Analysis Reports</h2>
     <div class="subtitle">
         Historical transaction records with fraud detection results
@@ -152,7 +11,6 @@
     <div class="table-wrapper">
         <table>
             <tr>
-                <th>Account No</th>
                 <th>Amount (₹)</th>
                 <th>Transactions</th>
                 <th>Hour</th>
@@ -161,15 +19,14 @@
 
             {% for row in report_data %}
             <tr>
-                <td>{{ row.acc_no }}</td>
                 <td>{{ row.amount }}</td>
                 <td>{{ row.transactions }}</td>
                 <td>{{ row.hour }}</td>
                 <td>
-                    {% if row.fraud == "Fraud" %}
-                        <span class="badge fraud">Fraud</span>
+                    {% if row.fraud_result == "Fraud" %}
+                    <span class="badge fraud">Fraud</span>
                     {% else %}
-                        <span class="badge normal">Normal</span>
+                    <span class="badge normal">Normal</span>
                     {% endif %}
                 </td>
             </tr>
@@ -177,9 +34,7 @@
         </table>
     </div>
 
-    <a href="{% url 'home' %}" class="button">⬅ Back to Home</a>
+    <a href="{% url 'home' %}" class="button" style="margin-top: 2rem; max-width: 200px; display: inline-flex;">⬅ Back
+        to Home</a>
 </div>
-
-</body>
-</html>
-
+{% endblock %}

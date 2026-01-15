@@ -1,170 +1,23 @@
-{% load static %}
+{% extends 'core/base.html' %}
+{% block title %}Fraud Analysis | FraudGuard{% endblock %}
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Fraud Analysis | Fraud Detection System</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #cce7ff, #e8f5e9);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 50px 15px;
-        }
-
-        .box {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            max-width: 850px;
-            width: 100%;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            animation: fadeSlide 0.8s ease;
-        }
-
-        @keyframes fadeSlide {
-            from {opacity: 0; transform: translateY(25px);}
-            to {opacity: 1; transform: translateY(0);}
-        }
-
-        h2 {
-            color: #004d40;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        h3, h4 {
-            color: #00796b;
-            margin-top: 25px;
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            margin-bottom: 15px;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            margin-top: 10px;
-            background: linear-gradient(135deg, #00796b, #004d40);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,121,107,0.4);
-        }
-
-        .success {
-            background-color: #ccffcc;
-            color: #006600;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .divider {
-            margin: 35px 0;
-            border-top: 2px dashed #ccc;
-        }
-
-        img {
-            max-width: 100%;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            margin: 15px 0;
-            display: block;
-        }
-
-        .btn-back {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #1976d2, #0d47a1);
-            color: white;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-back:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(25,118,210,0.4);
-        }
-
-        .summary-box {
-            background: #f0fdf4;
-            border-left: 6px solid #2ecc71;
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .summary-box ul {
-            padding-left: 18px;
-            margin: 0;
-        }
-
-        .summary-box li {
-            margin-bottom: 6px;
-        }
-
-        @media(max-width:600px){
-            .box {
-                padding: 25px 15px;
-            }
-            button, .btn-back {
-                font-size: 14px;
-                padding: 12px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-<div class="box">
+{% block content %}
+<div class="box wide">
     <h2>📊 Fraud Detection & Analysis</h2>
 
     <!-- ===== STEP 1 ===== -->
     <h3>Step 1: Upload Training CSV</h3>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <label>Training Dataset (with fraud column)</label>
-        <input type="file" name="train_csv" required>
-        <button type="submit">Train Model</button>
+        <div class="form-group">
+            <label>Training Dataset (with fraud column)</label>
+            <input type="file" name="train_csv" required>
+        </div>
+        <button type="submit" class="button">Train Model</button>
     </form>
 
     {% if message %}
-        <div class="success">{{ message }}</div>
+    <div class="success-message">{{ message }}</div>
     {% endif %}
 
     <div class="divider"></div>
@@ -173,39 +26,96 @@
     <h3>Step 2: Upload User CSV</h3>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <label>User Dataset (no fraud column)</label>
-        <input type="file" name="user_csv" required>
-        <button type="submit">Analyze Fraud</button>
-        <a href="{% url 'home' %}" class="btn-back">⬅ Back to Homepage</a>
+        <div class="form-group">
+            <label>User Dataset (no fraud column)</label>
+            <input type="file" name="user_csv" required>
+        </div>
+        <button type="submit" class="button">Analyze Fraud</button>
+        <a href="{% url 'home' %}" class="button secondary" style="margin-top: 1rem;">⬅ Back to Dashboard</a>
     </form>
 
     <!-- ===== RESULTS ===== -->
     {% if analysis_done %}
-        <div class="divider"></div>
-        <h3>📈 Fraud Analysis Results</h3>
+    <div class="divider"></div>
+    <h3>📈 Analysis Results</h3>
 
-        <!-- Dataset Summary -->
-        {% if dataset_summary %}
-        <div class="summary-box">
-            <h4>📊 Dataset Summary</h4>
-            <ul>
-                <li><b>Total Transactions:</b> {{ dataset_summary.total }}</li>
-                <li><b>Fraud Detected:</b> {{ dataset_summary.fraud }}</li>
-                <li><b>Normal Transactions:</b> {{ dataset_summary.normal }}</li>
-                <li><b>Fraud Rate:</b> {{ dataset_summary.fraud_rate }}%</li>
-            </ul>
+    <!-- Dataset Summary -->
+    {% if dataset_summary %}
+    <div class="dashboard-grid">
+        <div class="card" style="text-align: center; padding: 1rem;">
+            <h4>Total Transactions</h4>
+            <p style="font-size: 1.5rem; color: var(--text-main); font-weight: 700;">{{ dataset_summary.total }}</p>
         </div>
-        {% endif %}
+        <div class="card" style="text-align: center; padding: 1rem; border-color: var(--danger-bg);">
+            <h4 style="color: var(--danger-text);">Fraud Detected</h4>
+            <p style="font-size: 1.5rem; color: var(--danger-text); font-weight: 700;">{{ dataset_summary.fraud }}</p>
+        </div>
+        <div class="card" style="text-align: center; padding: 1rem; border-color: var(--success-bg);">
+            <h4 style="color: var(--success-text);">Normal Transactions</h4>
+            <p style="font-size: 1.5rem; color: var(--success-text); font-weight: 700;">{{ dataset_summary.normal }}</p>
+        </div>
+    </div>
+    {% endif %}
 
-        <!-- Charts -->
-        <h4>Fraud Count vs Time</h4>
-        <img src="/media/{{ fraud_time_chart }}" alt="Fraud Time Chart">
+    <!-- Charts -->
+    <h4 style="margin-top: 2rem;">Fraud Count vs Time</h4>
+    <img src="/media/{{ fraud_time_chart }}" alt="Fraud Time Chart"
+        style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 2rem;">
 
-        <h4>Fraud vs Normal Probability</h4>
-        <img src="/media/{{ prob_chart }}" alt="Fraud Probability Chart">
+    <h4>Fraud vs Normal Probability</h4>
+    <img src="/media/{{ prob_chart }}" alt="Fraud Probability Chart"
+        style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-light);">
+
+    <!-- ===== STEP 3: FRAUD LIST ===== -->
+    {% if fraud_records %}
+    <div class="divider"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3>⚠️ Detected Fraud Cases</h3>
+        <a href="{% url 'export_fraud_csv' %}" class="button btn-inline" style="background: var(--success-text);">
+            📥 Download CSV
+        </a>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Amount</th>
+                    <th>Transactions</th>
+                    <th>Hour</th>
+                    <th>Fraud Prob</th>
+                    <th>Risk Level</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in fraud_records %}
+                <tr>
+                    <td>₹{{ row.amount }}</td>
+                    <td>{{ row.transactions }}</td>
+                    <td>{{ row.hour }}</td>
+                    <td>{{ row.fraud_prob }}</td>
+                    <td>
+                        {% if row.risk_level == 'High' %}
+                        <span class="badge fraud">High</span>
+                        {% elif row.risk_level == 'Medium' %}
+                        <span class="badge warning">Medium</span>
+                        {% else %}
+                        <span class="badge normal">Low</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge fraud" style="background:#000; color:#fff;">Detected</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="success-message" style="margin-top: 2rem;">
+        ✅ No fraud cases detected in this dataset.
+    </div>
+    {% endif %}
+
     {% endif %}
 </div>
-</body>
-</html>
-
-
+{% endblock %}
