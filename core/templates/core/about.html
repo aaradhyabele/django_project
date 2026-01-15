@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>About | Fraud Detection System</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #cce7ff, #e8f5e9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .box {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(8px);
+            padding: 45px 30px;
+            max-width: 650px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            text-align: center;
+            animation: fadeSlide 0.8s ease;
+        }
+
+        @keyframes fadeSlide {
+            from {opacity: 0; transform: translateY(20px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        h2 {
+            color: #004d40;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        a.button {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #00796b, #004d40);
+            color: white;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        a.button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,121,107,0.4);
+        }
+
+        @media(max-width:600px){
+            .box {
+                padding: 30px 20px;
+            }
+            a.button {
+                padding: 12px 22px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2>ℹ️ About Fraud Detection System</h2>
+    <p>
+        This system predicts fraudulent transactions using Machine Learning models.
+        Users can input transaction details to check for fraud. 
+        The system uses Logistic Regression and Decision Tree models to provide accurate predictions.
+        <br><br>
+        Additionally, it provides an analytics dashboard for dataset insights and risk assessment.
+    </p>
+    <a href="{% url 'home' %}" class="button">⬅ Back to Home</a>
+</div>
+</body>
+</html>
+

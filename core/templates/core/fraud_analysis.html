@@ -1,0 +1,211 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fraud Analysis | Fraud Detection System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #cce7ff, #e8f5e9);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 50px 15px;
+        }
+
+        .box {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            max-width: 850px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            animation: fadeSlide 0.8s ease;
+        }
+
+        @keyframes fadeSlide {
+            from {opacity: 0; transform: translateY(25px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        h2 {
+            color: #004d40;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h3, h4 {
+            color: #00796b;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            background: linear-gradient(135deg, #00796b, #004d40);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,121,107,0.4);
+        }
+
+        .success {
+            background-color: #ccffcc;
+            color: #006600;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .divider {
+            margin: 35px 0;
+            border-top: 2px dashed #ccc;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            margin: 15px 0;
+            display: block;
+        }
+
+        .btn-back {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #1976d2, #0d47a1);
+            color: white;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(25,118,210,0.4);
+        }
+
+        .summary-box {
+            background: #f0fdf4;
+            border-left: 6px solid #2ecc71;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-box ul {
+            padding-left: 18px;
+            margin: 0;
+        }
+
+        .summary-box li {
+            margin-bottom: 6px;
+        }
+
+        @media(max-width:600px){
+            .box {
+                padding: 25px 15px;
+            }
+            button, .btn-back {
+                font-size: 14px;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="box">
+    <h2>📊 Fraud Detection & Analysis</h2>
+
+    <!-- ===== STEP 1 ===== -->
+    <h3>Step 1: Upload Training CSV</h3>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>Training Dataset (with fraud column)</label>
+        <input type="file" name="train_csv" required>
+        <button type="submit">Train Model</button>
+    </form>
+
+    {% if message %}
+        <div class="success">{{ message }}</div>
+    {% endif %}
+
+    <div class="divider"></div>
+
+    <!-- ===== STEP 2 ===== -->
+    <h3>Step 2: Upload User CSV</h3>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>User Dataset (no fraud column)</label>
+        <input type="file" name="user_csv" required>
+        <button type="submit">Analyze Fraud</button>
+        <a href="{% url 'home' %}" class="btn-back">⬅ Back to Homepage</a>
+    </form>
+
+    <!-- ===== RESULTS ===== -->
+    {% if analysis_done %}
+        <div class="divider"></div>
+        <h3>📈 Fraud Analysis Results</h3>
+
+        <!-- Dataset Summary -->
+        {% if dataset_summary %}
+        <div class="summary-box">
+            <h4>📊 Dataset Summary</h4>
+            <ul>
+                <li><b>Total Transactions:</b> {{ dataset_summary.total }}</li>
+                <li><b>Fraud Detected:</b> {{ dataset_summary.fraud }}</li>
+                <li><b>Normal Transactions:</b> {{ dataset_summary.normal }}</li>
+                <li><b>Fraud Rate:</b> {{ dataset_summary.fraud_rate }}%</li>
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Charts -->
+        <h4>Fraud Count vs Time</h4>
+        <img src="/media/{{ fraud_time_chart }}" alt="Fraud Time Chart">
+
+        <h4>Fraud vs Normal Probability</h4>
+        <img src="/media/{{ prob_chart }}" alt="Fraud Probability Chart">
+    {% endif %}
+</div>
+</body>
+</html>
+
+

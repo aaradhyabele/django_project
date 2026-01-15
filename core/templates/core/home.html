@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home | Fraud Detection System</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #dff6ff, #e8f5e9);
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .box {
+            background: #ffffff;
+            padding: 45px 40px;
+            max-width: 480px;
+            width: 100%;
+            border-radius: 18px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            text-align: center;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #00695c;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #555;
+            font-size: 15px;
+            margin-bottom: 30px;
+        }
+
+        a.button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+
+            text-decoration: none;
+            padding: 14px;
+            margin: 14px 0;
+
+            background: linear-gradient(135deg, #00796b, #004d40);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+
+            transition: all 0.3s ease;
+        }
+
+        a.button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 22px rgba(0, 121, 107, 0.4);
+        }
+
+        .footer-text {
+            margin-top: 25px;
+            font-size: 13px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>🏦 Fraud Detection System</h1>
+    <div class="subtitle">
+        Machine Learning Based Transaction Analysis
+    </div>
+
+    <a href="{% url 'predict' %}" class="button">
+        🔍 Analyze Transaction
+    </a>
+
+    <a href="{% url 'fraud_analysis' %}" class="button">
+        📊 Analytics Dashboard
+    </a>
+
+    <a href="{% url 'about' %}" class="button">
+        ℹ️ About Project
+    </a>
+
+    <div class="footer-text">
+        Diploma Major Project
+    </div>
+</div>
+
+</body>
+</html>
+
