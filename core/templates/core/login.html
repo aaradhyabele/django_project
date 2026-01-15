@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #cce7ff, #e8f5e9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .box {
+            background: white;
+            padding: 30px;
+            width: 360px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-top: 12px;
+            display: block;
+        }
+
+        small {
+            color: #666;
+            font-size: 12px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #1976d2;
+        }
+
+        .error {
+            color: red;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>User Login</h2>
+    <p style="text-align:center; color:#555;">Enter your registered credentials</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>Username</label>
+        {{ form.username }}
+        <small>Your registered username</small>
+
+        <label>Password</label>
+        {{ form.password }}
+        <small>Case-sensitive password</small>
+
+        {% if form.errors %}
+            <div class="error">Invalid username or password</div>
+        {% endif %}
+
+        <button type="submit">Login</button>
+    </form>
+
+    <div class="link">
+        New user? <a href="{% url 'register' %}">Create an account</a>
+    </div>
+</div>
+
+</body>
+</html>
+
