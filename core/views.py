@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -6,14 +6,49 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
+from django.conf import settings
 from .models import TransactionRecord
+from django.http import HttpResponse
+import csv
+import pickle
+
+# ================= GLOBAL MODEL VARIABLES =================
+MODEL_PATH = os.path.join(settings.BASE_DIR, 'core', 'global_model.pkl')
+
+g_lr = None
+g_dt = None
+g_rf = None
+g_scaler = None
+g_model_trained = False
+g_feature_cols = ["amount", "transactions", "hour"]
+
+def load_global_model():
+    """Lengths the model from disk if it exists."""
+    global g_lr, g_dt, g_rf, g_scaler, g_model_trained
+    if os.path.exists(MODEL_PATH):
+        try:
+            with open(MODEL_PATH, 'rb') as f:
+                data = pickle.load(f)
+                g_lr = data.get('lr')
+                g_dt = data.get('dt')
+                g_rf = data.get('rf')
+                g_scaler = data.get('scaler')
+                g_model_trained = True
+                print("Global model loaded successfully.")
+        except Exception as e:
+            print(f"Error loading model: {e}")
+
+# Try loading on startup
+load_global_model()
+
 
 @login_required
 def home(request):
@@ -54,35 +89,69 @@ def user_login(request):
         form = AuthenticationForm()
     return render(request, 'core/login.html', {'form': form})
 
-# Logout view
 @login_required
 def user_logout(request):
     logout(request)
     messages.info(request, "Logged out successfully!")
     return redirect('login')
 
-# ================= GLOBAL VARIABLES =================
-lr = None
-dt = None
-rf = None  # Random Forest
-scaler = None
-X_test_scaled = None
-y_test = None
-model_trained = False
 
+# ================= GLOBAL TRAINING VIEW =================
+@login_required
+def train_global_model(request):
+    global g_lr, g_dt, g_rf, g_scaler, g_model_trained
+    
+    if request.method == 'POST' and 'train_csv' in request.FILES:
+        try:
+            csv_file = request.FILES['train_csv']
+            df = pd.read_csv(csv_file)
+            
+            # Simple Preprocessing
+            target = 'fraud'
+            
+            # Check basic columns first
+            required = g_feature_cols + [target]
+            if not all(col in df.columns for col in required):
+                messages.error(request, f"CSV must contain columns: {required}")
+                return redirect(request.META.get('HTTP_REFERER', 'home'))
 
-def preprocess_data(df):
-    """
-    Applies feature engineering:
-    1. amount_per_txn
-    2. is_night
-    3. high_amount_flag
-    """
-    df = df.copy()
-    df['amount_per_txn'] = df['amount'] / (df['transactions'] + 1)
-    df['is_night'] = df['hour'].apply(lambda x: 1 if x < 6 else 0)
-    df['high_amount_flag'] = (df['amount'] > 50000).astype(int)
-    return df
+            df = df.dropna(subset=required)
+            
+            X = df[g_feature_cols]
+            y = df[target]
+            
+            g_scaler = StandardScaler()
+            X_scaled = g_scaler.fit_transform(X)
+            
+            # Train Logistic Regression
+            g_lr = LogisticRegression()
+            g_lr.fit(X_scaled, y)
+            
+            # Train Decision Tree
+            g_dt = DecisionTreeClassifier()
+            g_dt.fit(X_scaled, y)
+            
+            # Train Random Forest
+            g_rf = RandomForestClassifier(n_estimators=100, random_state=42)
+            g_rf.fit(X_scaled, y)
+            
+            g_model_trained = True
+            
+            # Save to disk
+            with open(MODEL_PATH, 'wb') as f:
+                pickle.dump({
+                    'lr': g_lr,
+                    'dt': g_dt,
+                    'rf': g_rf,
+                    'scaler': g_scaler
+                }, f)
+                
+            messages.success(request, "Global Model Trained Successfully!")
+            
+        except Exception as e:
+            messages.error(request, f"Training failed: {str(e)}")
+            
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
 
 
 def about(request):
@@ -95,59 +164,22 @@ def report(request):
     return render(request, 'core/report.html', {'report_data': report_data})
 
 
+@login_required
 def fraud_prediction(request):
-    global lr, dt, rf, scaler, X_test_scaled, y_test, model_trained
+    global g_lr, g_dt, g_rf, g_scaler, g_model_trained
 
     context = {
         "result": None,
         "error": None,
-        "message": None
+        "message": None,
+        "model_trained": g_model_trained
     }
 
     if request.method == "POST":
-
-        # ========== TRAIN MODEL ==========
-        if "train_csv" in request.FILES:
-            try:
-                df = pd.read_csv(request.FILES["train_csv"])
-
-                # Feature Engineering
-                df = preprocess_data(df)
-
-                # Select Features (Update to include new ones)
-                features = ["amount", "transactions", "hour", "amount_per_txn", "is_night", "high_amount_flag"]
-                X = df[features]
-                y = df["fraud"]
-
-                scaler = StandardScaler()
-                X_scaled = scaler.fit_transform(X)
-
-                X_train, X_test, y_train, y_test = train_test_split(
-                    X_scaled, y, test_size=0.2, random_state=42
-                )
-
-                # Logistic Regression
-                lr = LogisticRegression()
-                lr.fit(X_train, y_train)
-
-                # Decision Tree
-                dt = DecisionTreeClassifier()
-                dt.fit(X_train, y_train)
-
-                # Random Forest
-                rf = RandomForestClassifier(n_estimators=100, random_state=42)
-                rf.fit(X_train, y_train)
-
-                X_test_scaled = X_test
-                model_trained = True
-
-                context["message"] = "Models trained successfully (LR, DT, RF)"
-
-            except Exception as e:
-                context["error"] = str(e)
-
-        # ========== PREDICT TRANSACTION ==========
-        elif model_trained:
+        if not g_model_trained:
+             context["error"] = "Please train the model first using the box at the bottom."
+        
+        else:
             try:
                 amount = float(request.POST.get("amount"))
                 transactions = int(request.POST.get("transactions"))
@@ -160,27 +192,19 @@ def fraud_prediction(request):
                     "hour": hour
                 }])
 
-                # Apply same Feature Engineering
-                user_df = preprocess_data(user_df)
-                
-                features = ["amount", "transactions", "hour", "amount_per_txn", "is_night", "high_amount_flag"]
-                user_scaled = scaler.transform(user_df[features])
+                # Scale
+                user_scaled = g_scaler.transform(user_df[g_feature_cols])
 
-                pred_lr = lr.predict(user_scaled)[0]
-                pred_dt = dt.predict(user_scaled)[0]
-                pred_rf = rf.predict(user_scaled)[0]
+                pred_lr = g_lr.predict(user_scaled)[0]
+                pred_dt = g_dt.predict(user_scaled)[0]
+                pred_rf = g_rf.predict(user_scaled)[0]
 
-                acc_lr = round(accuracy_score(y_test, lr.predict(X_test_scaled)), 2)
-                acc_dt = round(accuracy_score(y_test, dt.predict(X_test_scaled)), 2)
-                acc_rf = round(accuracy_score(y_test, rf.predict(X_test_scaled)), 2)
-
-                # ===== Risk Score calculation (Simplified/Heuristic) =====
+                # Risk Score calculation (Simplified/Heuristic)
                 risk_score = 0
                 if amount > 1000: risk_score += 0.3
                 if transactions > 2: risk_score += 0.2
                 if hour >= 22 or hour <= 5: risk_score += 0.3
                 
-                # Boost risk if RF predicts fraud (it's usually robust)
                 if pred_rf == 1: risk_score += 0.2
                 
                 risk_score = min(risk_score, 1.0)
@@ -192,7 +216,7 @@ def fraud_prediction(request):
                 elif risk_score >= 0.4:
                     risk_level = "Medium Risk"
                     final_decision = "Suspicious"
-                    fraud_result = "Normal" # Or Suspicious
+                    fraud_result = "Normal" 
                 else:
                     risk_level = "Low Risk"
                     final_decision = "Normal"
@@ -203,18 +227,15 @@ def fraud_prediction(request):
                     amount=amount,
                     transactions=transactions,
                     hour=hour,
-                    fraud_result=fraud_result, # Simple status
+                    fraud_result=fraud_result,
                     risk_level=risk_level,
                     risk_score=risk_score
                 )
 
                 context["result"] = {
                     "prediction_logistic": "Fraud" if pred_lr == 1 else "Normal",
-                    "accuracy_logistic": acc_lr,
                     "prediction_dt": "Fraud" if pred_dt == 1 else "Normal",
-                    "accuracy_dt": acc_dt,
                     "prediction_rf": "Fraud" if pred_rf == 1 else "Normal",
-                    "accuracy_rf": acc_rf,
                     "risk_level": risk_level,
                     "final_decision": final_decision,
                     "risk_score": risk_score
@@ -223,179 +244,116 @@ def fraud_prediction(request):
             except Exception as e:
                 context["error"] = str(e)
 
-        else:
-            context["error"] = "Please train the model first."
-
     return render(request, "core/predict.html", context)
 
-import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import os
 
-from django.shortcuts import render
-from django.conf import settings
-
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-
-
-# ===== GLOBAL VARIABLES (Model trained only once) =====
-model = None
-scaler = None
-model_trained = False
-
-
+@login_required
 def fraud_analysis(request):
-    global model, scaler, model_trained
+    global g_model_trained, g_scaler, g_lr
 
-    context = {}
+    context = {"model_trained": g_model_trained}
 
-    if request.method == "POST":
-
-        # ========= STEP 1: TRAIN MODEL =========
-        if "train_csv" in request.FILES:
-            train_file = request.FILES["train_csv"]
-
-            df = pd.read_csv(train_file)
-
-            X = df[["amount", "transactions", "hour"]]
-            y = df["fraud"]
-
-            scaler = StandardScaler()
-            X_scaled = scaler.fit_transform(X)
-
-            model = LogisticRegression()
-            model.fit(X_scaled, y)
-
-            model_trained = True
-            context["message"] = "Model trained successfully"
-
-        #
-
-    # ========= STEP 2: ANALYZE USER CSV =========
-    if request.method == "POST" and "user_csv" in request.FILES and model_trained:
+    if request.method == "POST" and "user_csv" in request.FILES:
+        if not g_model_trained:
+             context["error"] = "Please train the model first using the box at the bottom."
+             return render(request, "core/fraud_analysis.html", context)
 
         # ===== READ USER CSV =====
-        user_file = request.FILES["user_csv"]
-        user_df = pd.read_csv(user_file)
+        try:
+            user_file = request.FILES["user_csv"]
+            user_df = pd.read_csv(user_file)
 
-        # ===== DATA CLEANING =====
-        # Ensure numeric columns
-        for col in ["amount", "transactions", "hour"]:
-            user_df[col] = pd.to_numeric(user_df[col], errors='coerce')
+            # ===== DATA CLEANING =====
+            for col in g_feature_cols:
+                if col not in user_df.columns:
+                     context["error"] = f"Missing column: {col}"
+                     return render(request, "core/fraud_analysis.html", context)
+                user_df[col] = pd.to_numeric(user_df[col], errors='coerce')
 
-        # Drop rows with missing critical values
-        user_df.dropna(subset=["amount", "transactions", "hour"], inplace=True)
-
-        # Filter out invalid values
-        user_df = user_df[
-            (user_df["amount"] >= 0) &
-            (user_df["transactions"] > 0) &
-            (user_df["hour"].between(0, 23))
-        ]
-
-        # ===== FEATURE SELECTION & SCALING =====
-        X_user = user_df[["amount", "transactions", "hour"]]
-        X_user_scaled = scaler.transform(X_user)
-
-        # ===== PREDICTION =====
-        predictions = model.predict(X_user_scaled)
-        probabilities = model.predict_proba(X_user_scaled)
-
-        # ===== ADD RESULTS TO DATAFRAME =====
-        user_df["predicted_fraud"] = predictions
-        user_df["fraud_prob"] = probabilities[:, 1]
-
-
-        # ===== DATASET SUMMARY =====
-        total_transactions = len(user_df)
-        fraud_count = int((user_df["predicted_fraud"] == 1).sum())
-        normal_count = total_transactions - fraud_count
-        fraud_rate = round((fraud_count / total_transactions) * 100, 2)
-
-        context["dataset_summary"] = {
-            "total": total_transactions,
-            "fraud": fraud_count,
-            "normal": normal_count,
-            "fraud_rate": fraud_rate
-        }
-
-        # ===== Fraud Count vs Time =====
-        fraud_time = (
-            user_df[user_df["predicted_fraud"] == 1]
-            .groupby("hour")
-            .size()
-        )
-
-        plt.figure()
-        fraud_time.plot()
-        plt.xlabel("Hour")
-        plt.ylabel("Fraud Count")
-        plt.title("Fraud Count vs Time")
-
-        fraud_time_path = os.path.join(settings.MEDIA_ROOT, "fraud_time.png")
-        plt.savefig(fraud_time_path)
-        plt.close()
-
-        # ===== Fraud vs Normal Probability =====
-        fraud_prob = user_df["fraud_prob"].mean()
-        normal_prob = 1 - fraud_prob
-
-        plt.figure()
-        plt.bar(["Fraud", "Normal"], [fraud_prob, normal_prob])
-        plt.ylabel("Probability")
-        plt.title("Fraud vs Normal Probability")
-
-        prob_path = os.path.join(settings.MEDIA_ROOT, "fraud_prob.png")
-        plt.savefig(prob_path)
-        plt.close()
-
-        context["fraud_time_chart"] = "fraud_time.png"
-        context["prob_chart"] = "fraud_prob.png"
-        context["analysis_done"] = True
-
-        # ===== FRAUD RECORDS & EXPORT =====
-        # Filter only fraud records
-        fraud_df = user_df[user_df["predicted_fraud"] == 1].copy()
-        
-        # Convert to list of dicts for the template
-        fraud_records = fraud_df.to_dict(orient="records")
-        
-        # Round probability and Calculate Risk Level
-        for record in fraud_records:
-            # Rounding
-            record['fraud_prob'] = round(record['fraud_prob'], 4)
+            user_df.dropna(subset=g_feature_cols, inplace=True)
             
-            # Risk Calc
-            amount = record.get('amount', 0)
-            transactions = record.get('transactions', 0)
-            hour = record.get('hour', 0)
+            # Simple Filter
+            user_df = user_df[
+                (user_df["amount"] >= 0) &
+                (user_df["transactions"] >= 0)
+            ]
+
+            # ===== SCALING =====
+            X_user = user_df[g_feature_cols]
+            X_user_scaled = g_scaler.transform(X_user)
+
+            # ===== PREDICTION =====
+            model = g_lr # Defaulting to LR for analysis
+            predictions = model.predict(X_user_scaled)
+            probabilities = model.predict_proba(X_user_scaled)
+
+            # ===== ADD RESULTS =====
+            user_df["predicted_fraud"] = predictions
+            user_df["fraud_prob"] = probabilities[:, 1]
+
+            # ===== DATASET SUMMARY =====
+            total_transactions = len(user_df)
+            fraud_count = int((user_df["predicted_fraud"] == 1).sum())
+            normal_count = total_transactions - fraud_count
+            fraud_rate = round((fraud_count / total_transactions) * 100, 2)
+
+            context["dataset_summary"] = {
+                "total": total_transactions,
+                "fraud": fraud_count,
+                "normal": normal_count,
+                "fraud_rate": fraud_rate
+            }
+
+            # ===== CHARTS =====
+            if "hour" in user_df.columns:
+                fraud_time = (
+                    user_df[user_df["predicted_fraud"] == 1]
+                    .groupby("hour")
+                    .size()
+                )
+                plt.figure()
+                fraud_time.plot(kind='bar')
+                plt.xlabel("Hour")
+                plt.ylabel("Fraud Count")
+                plt.title("Fraud Count vs Time")
+                fraud_time_path = os.path.join(settings.MEDIA_ROOT, "fraud_time.png")
+                plt.savefig(fraud_time_path)
+                plt.close()
+                context["fraud_time_chart"] = "fraud_time.png"
+
+            fraud_prob = user_df["fraud_prob"].mean()
+            normal_prob = 1 - fraud_prob
             
-            risk_score = 0
-            if amount > 1000: risk_score += 0.3
-            if transactions > 2: risk_score += 0.2
-            if hour >= 22 or hour <= 5: risk_score += 0.3
-            risk_score = min(risk_score, 1.0)
+            plt.figure()
+            plt.bar(["Fraud", "Normal"], [fraud_prob, normal_prob])
+            plt.ylabel("Probability")
+            plt.title("Fraud vs Normal Probability")
+            prob_path = os.path.join(settings.MEDIA_ROOT, "fraud_prob.png")
+            plt.savefig(prob_path)
+            plt.close()
 
-            if risk_score >= 0.7:
-                record['risk_level'] = "High"
-            elif risk_score >= 0.4:
-                record['risk_level'] = "Medium"
-            else:
-                record['risk_level'] = "Low"
+            context["prob_chart"] = "fraud_prob.png"
+            context["analysis_done"] = True
 
-        context["fraud_records"] = fraud_records
+            # ===== EXPORT DATA =====
+            fraud_df = user_df[user_df["predicted_fraud"] == 1].copy()
+            fraud_records = fraud_df.to_dict(orient="records")
+            
+            for record in fraud_records:
+                record['fraud_prob'] = round(record.get('fraud_prob', 0), 4)
+                
+                # Risk Logic
+                risk_score = record.get('fraud_prob', 0) # Use prob as base risk
+                record['risk_level'] = "High" if risk_score > 0.7 else "Medium" if risk_score > 0.4 else "Low"
 
-        # Store in session for CSV export
-        request.session['fraud_data'] = fraud_records
+            context["fraud_records"] = fraud_records
+            request.session['fraud_data'] = fraud_records
+
+        except Exception as e:
+            context["error"] = f"Error processing file: {str(e)}"
 
     return render(request, "core/fraud_analysis.html", context)
 
-
-from django.http import HttpResponse
-import csv
 
 def export_fraud_csv(request):
     """
@@ -407,10 +365,8 @@ def export_fraud_csv(request):
     response['Content-Disposition'] = 'attachment; filename="fraud_detected.csv"'
 
     writer = csv.writer(response)
-    # Write header
     writer.writerow(['Amount', 'Transactions', 'Hour', 'Fraud Probability', 'Risk Level'])
 
-    # Write data
     for row in fraud_data:
         writer.writerow([
             row.get('amount'), 
@@ -421,5 +377,3 @@ def export_fraud_csv(request):
         ])
 
     return response
-
-

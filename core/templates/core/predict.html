@@ -4,24 +4,6 @@
 {% block content %}
 <div class="box">
 
-    <!-- Train Model Section -->
-    <h2>🧠 Train Fraud Detection Model</h2>
-
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="form-group">
-            <label><b>Upload Training Dataset (CSV)</b></label>
-            <input type="file" name="train_csv" required>
-        </div>
-        <button type="submit" class="button">Train Model</button>
-    </form>
-
-    {% if message %}
-    <div class="success-message">✅ {{ message }}</div>
-    {% endif %}
-
-    <div class="divider"></div>
-
     <!-- Prediction Section -->
     <h2>🔍 Fraud Prediction...!</h2>
 

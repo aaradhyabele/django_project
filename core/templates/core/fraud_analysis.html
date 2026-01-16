@@ -6,24 +6,7 @@
     <h2>📊 Fraud Detection & Analysis</h2>
 
     <!-- ===== STEP 1 ===== -->
-    <h3>Step 1: Upload Training CSV</h3>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="form-group">
-            <label>Training Dataset (with fraud column)</label>
-            <input type="file" name="train_csv" required>
-        </div>
-        <button type="submit" class="button">Train Model</button>
-    </form>
-
-    {% if message %}
-    <div class="success-message">{{ message }}</div>
-    {% endif %}
-
-    <div class="divider"></div>
-
-    <!-- ===== STEP 2 ===== -->
-    <h3>Step 2: Upload User CSV</h3>
+    <h3>Step 1: Upload User CSV</h3>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-group">

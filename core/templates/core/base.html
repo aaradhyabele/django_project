@@ -32,6 +32,8 @@
             <!-- Placeholder for future auth (Login/Logout) -->
             {% if user.is_authenticated %}
             <span class="nav-link">Hello, {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="button secondary btn-inline"
+                style="padding: 0.5rem 1rem; font-size: 0.85rem;">Logout</a>
             {% else %}
             <a href="{% url 'login' %}" class="button secondary btn-inline"
                 style="padding: 0.5rem 1rem; font-size: 0.85rem;">Login</a>
@@ -49,6 +51,22 @@
     <footer class="footer">
         <p>&copy; 2026 FraudGuard Analytics. Secure Transaction Monitoring System.</p>
     </footer>
+
+    <!-- Global Training Box (Floating Widget) -->
+    <div class="training-bar">
+        <div>
+            <h4>🧠 Global Model</h4>
+            <small style="color: var(--text-muted);">Upload generic CSV (e.g. fraud_dataset_v2.csv).</small>
+        </div>
+
+        <form action="{% url 'train_global_model' %}" method="post" enctype="multipart/form-data" class="training-form">
+            {% csrf_token %}
+            <input type="file" name="train_csv" required style="width: auto;">
+            <button type="submit" class="button btn-inline" style="padding: 0.6rem; font-size: 0.8rem;">
+                Train System
+            </button>
+        </form>
+    </div>
 
 </body>
 
