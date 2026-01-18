@@ -1,11 +1,10 @@
 {% extends 'core/base.html' %}
-{% block title %}Fraud Prediction | Fraud Detection System{% endblock %}
+{% block title %}Fraud Prediction | FraudGuard AI{% endblock %}
 
 {% block content %}
 <div class="box">
-
-    <!-- Prediction Section -->
-    <h2>🔍 Fraud Prediction...!</h2>
+    <h2>🔍 Fraud Prediction</h2>
+    <p class="subtitle">Analyze individual transactions for potential fraud risk using machine learning</p>
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -29,44 +28,68 @@
     </form>
 
     {% if result %}
-    <div class="result {% if result.prediction_logistic == 'Fraud' %}fraud{% else %}normal{% endif %}">
-        🔹 Logistic Regression: <b>{{ result.prediction_logistic }}</b>
-        (Accuracy: {{ result.accuracy_logistic }})
+    <div class="divider"></div>
+
+    <h3 style="margin-top: 0;">📊 Model Predictions</h3>
+
+    <div class="result {% if result.prediction_logistic == 'Fraud' %}fraud{% else %}normal{% endif %}"
+        style="flex-direction: row; justify-content: space-between; align-items: center;">
+        <span>🔹 <b>Logistic Regression</b></span>
+        <span><b>{{ result.prediction_logistic }}</b> ({{ result.accuracy_logistic }})</span>
     </div>
 
-    <div class="result {% if result.prediction_dt == 'Fraud' %}fraud{% else %}normal{% endif %}">
-        🔹 Decision Tree: <b>{{ result.prediction_dt }}</b>
-        (Accuracy: {{ result.accuracy_dt }})
+    <div class="result {% if result.prediction_dt == 'Fraud' %}fraud{% else %}normal{% endif %}"
+        style="flex-direction: row; justify-content: space-between; align-items: center;">
+        <span>🔹 <b>Decision Tree</b></span>
+        <span><b>{{ result.prediction_dt }}</b> ({{ result.accuracy_dt }})</span>
     </div>
 
-    <div class="result {% if result.prediction_rf == 'Fraud' %}fraud{% else %}normal{% endif %}">
-        🔹 Random Forest: <b>{{ result.prediction_rf }}</b>
-        (Accuracy: {{ result.accuracy_rf }})
+    <div class="result {% if result.prediction_rf == 'Fraud' %}fraud{% else %}normal{% endif %}"
+        style="flex-direction: row; justify-content: space-between; align-items: center;">
+        <span>🔹 <b>Random Forest</b></span>
+        <span><b>{{ result.prediction_rf }}</b> ({{ result.accuracy_rf }})</span>
     </div>
 
-    <div class="result {% if result.risk_level == 'High Risk' %}fraud
-                               {% elif result.risk_level == 'Medium Risk' %}warning
-                               {% else %}normal{% endif %}">
-        🧠 <b>Final Risk Assessment</b><br>
-        Decision: <b>{{ result.final_decision }}</b><br>
-        Risk Level: <b>{{ result.risk_level }}</b><br>
-        Risk Score: <b>{{ result.risk_score }}</b>
+    <div class="divider"></div>
+
+    <div class="result {% if result.risk_level == 'High Risk' %}fraud{% elif result.risk_level == 'Medium Risk' %}warning{% else %}normal{% endif %}"
+        style="text-align: center;">
+        <h4 style="margin: 0 0 0.75rem 0;">🧠 Final Risk Assessment</h4>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 0.5rem;">
+            <div>
+                <small style="opacity: 0.8;">Decision</small>
+                <div style="font-weight: 700; font-size: 1rem;">{{ result.final_decision }}</div>
+            </div>
+            <div>
+                <small style="opacity: 0.8;">Reason</small>
+                <div style="font-weight: 700; font-size: 1rem;">{{ result.fraud_reason|default:"N/A" }}</div>
+            </div>
+            <div>
+                <small style="opacity: 0.8;">Risk Level</small>
+                <div style="font-weight: 700; font-size: 1rem;">{{ result.risk_level }}</div>
+            </div>
+            <div>
+                <small style="opacity: 0.8;">Risk Score</small>
+                <div style="font-weight: 700; font-size: 1rem;">{{ result.risk_score }}</div>
+            </div>
+        </div>
     </div>
 
-    <label style="margin-top: 1rem;"><b>Risk Meter</b></label>
-    <progress value="{{ result.risk_score }}" max="1" style="width: 100%; height: 20px; border-radius: 8px;"></progress>
+    <div style="margin-top: 1.5rem;">
+        <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">📈 Risk Meter</label>
+        <progress value="{{ result.risk_score }}" max="1"></progress>
+    </div>
 
     <div class="risk-reason-box">
-        <h4>🔍 Reason for Risk</h4>
+        <h4>🔍 Risk Factors</h4>
         <ul>
-            <li>Transaction amount is higher than usual</li>
-            <li>Multiple transactions detected</li>
-            <li>Late-night transaction hour</li>
+            <li>Transaction amount relative to normal patterns</li>
+            <li>Number of transactions in session</li>
+            <li>Time of day (late-night transactions)</li>
         </ul>
     </div>
 
-    <a href="{% url 'home' %}" class="button secondary" style="margin-top: 1.5rem;">⬅ Back to Homepage</a>
+    <a href="{% url 'home' %}" class="button secondary" style="margin-top: 1.5rem;">⬅ Back to Dashboard</a>
     {% endif %}
-
 </div>
 {% endblock %}

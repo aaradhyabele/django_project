@@ -1,60 +1,98 @@
 {% extends 'core/base.html' %}
-{% block title %}Fraud Analysis | FraudGuard{% endblock %}
+{% block title %}Fraud Analysis | FraudGuard AI{% endblock %}
 
 {% block content %}
 <div class="box wide">
     <h2>📊 Fraud Detection & Analysis</h2>
+    <p class="subtitle">Upload transaction datasets for comprehensive bulk analysis and visualization</p>
 
-    <!-- ===== STEP 1 ===== -->
-    <h3>Step 1: Upload User CSV</h3>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="form-group">
-            <label>User Dataset (no fraud column)</label>
-            <input type="file" name="user_csv" required>
-        </div>
-        <button type="submit" class="button">Analyze Fraud</button>
-        <a href="{% url 'home' %}" class="button secondary" style="margin-top: 1rem;">⬅ Back to Dashboard</a>
-    </form>
+    <!-- Upload Section -->
+    <div
+        style="background: rgba(99, 102, 241, 0.05); border: 2px dashed rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 2rem; text-align: center;">
+        <h3 style="margin: 0 0 0.5rem 0;">📁 Upload Transaction CSV</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+            Upload a CSV file with columns: amount, transactions, hour
+        </p>
 
-    <!-- ===== RESULTS ===== -->
+        <form method="post" enctype="multipart/form-data"
+            style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+            {% csrf_token %}
+            <input type="file" name="user_csv" required style="max-width: 300px;">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <button type="submit" class="button btn-inline">🔍 Analyze Dataset</button>
+                <a href="{% url 'home' %}" class="button secondary btn-inline">⬅ Back to Dashboard</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section -->
     {% if analysis_done %}
     <div class="divider"></div>
+
     <h3>📈 Analysis Results</h3>
 
     <!-- Dataset Summary -->
     {% if dataset_summary %}
-    <div class="dashboard-grid">
-        <div class="card" style="text-align: center; padding: 1rem;">
-            <h4>Total Transactions</h4>
-            <p style="font-size: 1.5rem; color: var(--text-main); font-weight: 700;">{{ dataset_summary.total }}</p>
+    <div class="dashboard-grid" style="margin-top: 1.5rem; gap: 1.5rem; grid-template-columns: repeat(3, 1fr);">
+        <div class="card"
+            style="text-align: center; border-left: 5px solid var(--primary); padding: 1.5rem; justify-content: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📊</div>
+            <div
+                style="font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em;">
+                Total Transactions</div>
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">{{ dataset_summary.total }}</div>
         </div>
-        <div class="card" style="text-align: center; padding: 1rem; border-color: var(--danger-bg);">
-            <h4 style="color: var(--danger-text);">Fraud Detected</h4>
-            <p style="font-size: 1.5rem; color: var(--danger-text); font-weight: 700;">{{ dataset_summary.fraud }}</p>
+
+        <div class="card"
+            style="text-align: center; border-left: 5px solid var(--danger-text); padding: 1.5rem; justify-content: center; background: rgba(220, 38, 38, 0.03);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚠️</div>
+            <div
+                style="font-weight: 700; color: var(--danger-text); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em;">
+                Fraud Detected</div>
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--danger-text);">{{ dataset_summary.fraud }}
+            </div>
+            <div style="font-weight: 600; color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+            </div>
         </div>
-        <div class="card" style="text-align: center; padding: 1rem; border-color: var(--success-bg);">
-            <h4 style="color: var(--success-text);">Normal Transactions</h4>
-            <p style="font-size: 1.5rem; color: var(--success-text); font-weight: 700;">{{ dataset_summary.normal }}</p>
+
+        <div class="card"
+            style="text-align: center; border-left: 5px solid var(--success-text); padding: 1.5rem; justify-content: center; background: rgba(21, 128, 61, 0.03);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✅</div>
+            <div
+                style="font-weight: 700; color: var(--success-text); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em;">
+                Normal Transactions</div>
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--success-text);">{{ dataset_summary.normal }}
+            </div>
         </div>
     </div>
     {% endif %}
 
     <!-- Charts -->
-    <h4 style="margin-top: 2rem;">Fraud Count vs Time</h4>
-    <img src="/media/{{ fraud_time_chart }}" alt="Fraud Time Chart"
-        style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 2rem;">
+    <div style="margin-top: 2rem;">
+        <h4 style="margin-bottom: 1rem;">📉 Fraud Distribution Over Time</h4>
+        <div style="background: white; border-radius: 12px; padding: 1rem; border: 1px solid var(--border-light);">
+            <img src="/media/{{ fraud_time_chart }}" alt="Fraud Time Chart"
+                style="max-width: 100%; border-radius: 8px;">
+        </div>
+    </div>
 
-    <h4>Fraud vs Normal Probability</h4>
-    <img src="/media/{{ prob_chart }}" alt="Fraud Probability Chart"
-        style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-light);">
+    <div style="margin-top: 2rem;">
+        <h4 style="margin-bottom: 1rem;">📊 Fraud vs Normal Probability</h4>
+        <div style="background: white; border-radius: 12px; padding: 1rem; border: 1px solid var(--border-light);">
+            <img src="/media/{{ prob_chart }}" alt="Fraud Probability Chart"
+                style="max-width: 100%; border-radius: 8px;">
+        </div>
+    </div>
 
-    <!-- ===== STEP 3: FRAUD LIST ===== -->
+    <!-- Fraud List -->
     {% if fraud_records %}
     <div class="divider"></div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h3>⚠️ Detected Fraud Cases</h3>
-        <a href="{% url 'export_fraud_csv' %}" class="button btn-inline" style="background: var(--success-text);">
+
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <h3 style="margin: 0;">⚠️ Detected Fraud Cases</h3>
+        <a href="{% url 'export_fraud_csv' %}" class="button btn-inline"
+            style="background: linear-gradient(135deg, #10b981, #059669);">
             📥 Download CSV
         </a>
     </div>
@@ -66,17 +104,17 @@
                     <th>Amount</th>
                     <th>Transactions</th>
                     <th>Hour</th>
-                    <th>Fraud Prob</th>
+                    <th>Fraud Probability</th>
                     <th>Risk Level</th>
-                    <th>Status</th>
+                    <th>Reason</th>
                 </tr>
             </thead>
             <tbody>
                 {% for row in fraud_records %}
                 <tr>
-                    <td>₹{{ row.amount }}</td>
+                    <td><strong>₹{{ row.amount }}</strong></td>
                     <td>{{ row.transactions }}</td>
-                    <td>{{ row.hour }}</td>
+                    <td>{{ row.hour }}:00</td>
                     <td>{{ row.fraud_prob }}</td>
                     <td>
                         {% if row.risk_level == 'High' %}
@@ -87,7 +125,11 @@
                         <span class="badge normal">Low</span>
                         {% endif %}
                     </td>
-                    <td><span class="badge fraud" style="background:#000; color:#fff;">Detected</span></td>
+                    <td>
+                        <span class="badge warning"
+                            style="background: rgba(245, 158, 11, 0.1); color: #b45309; border: 1px solid #fcd34d;">{{
+                            row.fraud_reason|default:"N/A" }}</span>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -95,10 +137,16 @@
     </div>
     {% else %}
     <div class="success-message" style="margin-top: 2rem;">
-        ✅ No fraud cases detected in this dataset.
+        ✅ Great news! No fraud cases detected in this dataset.
     </div>
     {% endif %}
 
+    {% endif %}
+
+    {% if error %}
+    <div class="error-message">
+        ❌ {{ error }}
+    </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -1,19 +1,63 @@
 {% extends 'core/base.html' %}
-{% block title %}About | Fraud Detection System{% endblock %}
+{% block title %}About | FraudGuard AI{% endblock %}
+
+{% block training_widget %}{% endblock %}
 
 {% block content %}
-<div class="box wide">
-    <h2>ℹ️ About Fraud Detection System</h2>
-    <div style="text-align: left; margin: 30px 0;">
-        <p style="font-size: 1.1rem; line-height: 1.8; color: var(--text-primary);">
-            This system predicts fraudulent transactions using Machine Learning models.
-            Users can input transaction details to check for fraud.
-            The system uses Logistic Regression and Decision Tree models to provide accurate predictions.
-        </p>
-        <p style="font-size: 1.1rem; line-height: 1.8; color: var(--text-primary); margin-top: 1rem;">
-            Additionally, it provides an analytics dashboard for dataset insights and risk assessment.
+<div class="box wide" style="text-align: center;">
+    <div style="font-size: 3.5rem; margin-bottom: 1rem;">🤖</div>
+    <h2 style="margin-bottom: 0.5rem;">About FraudGuard AI</h2>
+    <p class="subtitle" style="max-width: 600px; margin: 0 auto 2rem;">
+        Advanced fraud detection powered by machine learning
+    </p>
+
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; text-align: left; margin-bottom: 2rem;">
+
+        <div style="background: rgba(99, 102, 241, 0.08); padding: 1.5rem; border-radius: 12px;">
+            <h4 style="margin-bottom: 0.75rem;">🔍 Logistic Regression</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+                Statistical model that estimates fraud probability based on transaction features using a sigmoid
+                function.
+            </p>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.08); padding: 1.5rem; border-radius: 12px;">
+            <h4 style="margin-bottom: 0.75rem;">🌳 Decision Tree</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+                Tree-based classifier that makes decisions by splitting data on feature thresholds.
+            </p>
+        </div>
+
+        <div style="background: rgba(245, 158, 11, 0.08); padding: 1.5rem; border-radius: 12px;">
+            <h4 style="margin-bottom: 0.75rem;">🌲 Random Forest</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+                Ensemble method using multiple decision trees for more robust and accurate predictions.
+            </p>
+        </div>
+
+    </div>
+
+    <div
+        style="background: var(--glass-surface-light); padding: 2rem; border-radius: 12px; text-align: left; margin-bottom: 2rem;">
+        <h4 style="margin-bottom: 1rem;">📊 How It Works</h4>
+        <ol style="color: var(--text-secondary); line-height: 2; padding-left: 1.25rem; margin: 0;">
+            <li><strong>Train the Model</strong> — Upload a labeled dataset with fraud examples</li>
+            <li><strong>Analyze Transactions</strong> — Submit individual or bulk transactions</li>
+            <li><strong>Get Risk Assessment</strong> — Receive predictions with confidence scores</li>
+            <li><strong>Review Reports</strong> — Track historical analysis and detected fraud</li>
+        </ol>
+    </div>
+
+    <div
+        style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7; margin: 0;">
+            <strong>🛡️ FraudGuard AI</strong> combines multiple machine learning algorithms to provide accurate,
+            real-time fraud detection. Our system learns from historical data patterns to identify
+            suspicious transactions and protect your business.
         </p>
     </div>
-    <a href="{% url 'home' %}" class="button">⬅ Back to Home</a>
+
+    <a href="{% url 'home' %}" class="button" style="max-width: 250px; margin: 0 auto;">⬅ Back to Dashboard</a>
 </div>
 {% endblock %}

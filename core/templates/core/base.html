@@ -5,17 +5,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Fraud Detection System{% endblock %}</title>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Main Style -->
+    <meta name="description" content="FraudGuard AI - Advanced fraud detection powered by machine learning">
+    <title>{% block title %}FraudGuard AI{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Main Stylesheet -->
     <link rel="stylesheet" href="{% static 'core/style.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 
 <body>
-
-    <!-- Professional Navigation Bar -->
+    <!-- Navigation -->
     <nav class="navbar">
         <a href="{% url 'home' %}" class="brand">
             🏦 FraudGuard
@@ -25,23 +30,26 @@
             <a href="{% url 'home' %}" class="nav-link">Dashboard</a>
             <a href="{% url 'predict' %}" class="nav-link">Predict</a>
             <a href="{% url 'fraud_analysis' %}" class="nav-link">Analysis</a>
+            <a href="{% url 'report' %}" class="nav-link">Reports</a>
             <a href="{% url 'about' %}" class="nav-link">About</a>
         </div>
 
         <div class="auth-buttons">
-            <!-- Placeholder for future auth (Login/Logout) -->
             {% if user.is_authenticated %}
-            <span class="nav-link">Hello, {{ user.username }}</span>
+            <span class="nav-link" style="cursor: default;">👤 {{ user.username }}</span>
             <a href="{% url 'logout' %}" class="button secondary btn-inline"
-                style="padding: 0.5rem 1rem; font-size: 0.85rem;">Logout</a>
+                style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                Logout
+            </a>
             {% else %}
-            <a href="{% url 'login' %}" class="button secondary btn-inline"
-                style="padding: 0.5rem 1rem; font-size: 0.85rem;">Login</a>
+            <a href="{% url 'login' %}" class="button btn-inline" style="padding: 0.5rem 1.25rem; font-size: 0.85rem;">
+                Sign In
+            </a>
             {% endif %}
         </div>
     </nav>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <div class="container">
         {% block content %}
         {% endblock %}
@@ -49,24 +57,26 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>&copy; 2026 FraudGuard Analytics. Secure Transaction Monitoring System.</p>
+        <p>© 2026 FraudGuard AI. Secure Transaction Monitoring System.</p>
     </footer>
 
-    <!-- Global Training Box (Floating Widget) -->
+    <!-- Global Training Widget -->
+    {% block training_widget %}
     <div class="training-bar">
         <div>
-            <h4>🧠 Global Model</h4>
-            <small style="color: var(--text-muted);">Upload generic CSV (e.g. fraud_dataset_v2.csv).</small>
+            <h4>🧠 Train Model</h4>
+            <small>Upload a CSV with fraud labels to train the system.</small>
         </div>
 
         <form action="{% url 'train_global_model' %}" method="post" enctype="multipart/form-data" class="training-form">
             {% csrf_token %}
-            <input type="file" name="train_csv" required style="width: auto;">
-            <button type="submit" class="button btn-inline" style="padding: 0.6rem; font-size: 0.8rem;">
-                Train System
+            <input type="file" name="train_csv" required>
+            <button type="submit" class="button btn-inline" style="padding: 0.6rem 1rem; font-size: 0.8rem;">
+                Train
             </button>
         </form>
     </div>
+    {% endblock %}
 
 </body>
 

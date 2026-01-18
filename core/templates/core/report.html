@@ -1,40 +1,78 @@
 {% extends 'core/base.html' %}
-{% block title %}Fraud Reports | Fraud Detection System{% endblock %}
+{% block title %}Transaction History | FraudGuard AI{% endblock %}
+
+{% block training_widget %}{% endblock %}
 
 {% block content %}
 <div class="box wide">
-    <h2>📊 Fraud Analysis Reports</h2>
-    <div class="subtitle">
-        Historical transaction records with fraud detection results
-    </div>
+    <h2>📑 Transaction History</h2>
+    <p class="subtitle">Historical transaction records with fraud detection results</p>
 
+    {% if report_data %}
     <div class="table-wrapper">
         <table>
-            <tr>
-                <th>Amount (₹)</th>
-                <th>Transactions</th>
-                <th>Hour</th>
-                <th>Status</th>
-            </tr>
-
-            {% for row in report_data %}
-            <tr>
-                <td>{{ row.amount }}</td>
-                <td>{{ row.transactions }}</td>
-                <td>{{ row.hour }}</td>
-                <td>
-                    {% if row.fraud_result == "Fraud" %}
-                    <span class="badge fraud">Fraud</span>
-                    {% else %}
-                    <span class="badge normal">Normal</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
+            <thead>
+                <tr>
+                    <th>Amount (₹)</th>
+                    <th>Transactions</th>
+                    <th>Hour</th>
+                    <th>Risk Level</th>
+                    <th>Risk Score</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report_data %}
+                <tr>
+                    <td><strong>₹{{ row.amount }}</strong></td>
+                    <td>{{ row.transactions }}</td>
+                    <td>{{ row.hour }}:00</td>
+                    <td>
+                        {% if row.risk_level == "High Risk" %}
+                        <span class="badge fraud">High</span>
+                        {% elif row.risk_level == "Medium Risk" %}
+                        <span class="badge warning">Medium</span>
+                        {% else %}
+                        <span class="badge normal">Low</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.risk_score|floatformat:2 }}</td>
+                    <td>
+                        {% if row.fraud_result == "Fraud" %}
+                        <span class="badge warning"
+                            style="background: rgba(245, 158, 11, 0.1); color: #b45309; border: 1px solid #fcd34d;">{{
+                            row.fraud_reason|default:"N/A" }}</span>
+                        {% else %}
+                        <span class="badge normal">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.fraud_result == "Fraud" %}
+                        <span class="badge fraud">Fraud</span>
+                        {% else %}
+                        <span class="badge normal">Normal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </div>
+    {% else %}
+    <div
+        style="text-align: center; padding: 3rem 2rem; background: rgba(99, 102, 241, 0.05); border-radius: 12px; margin-top: 1rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+        <h4 style="color: var(--text-muted); margin-bottom: 0.5rem;">No Records Yet</h4>
+        <p style="color: var(--text-light); font-size: 0.9rem;">
+            Transaction history will appear here after you analyze transactions.
+        </p>
+        <a href="{% url 'predict' %}" class="button btn-inline" style="margin-top: 1.5rem;">Analyze First Transaction
+            →</a>
+    </div>
+    {% endif %}
 
-    <a href="{% url 'home' %}" class="button" style="margin-top: 2rem; max-width: 200px; display: inline-flex;">⬅ Back
-        to Home</a>
+    <a href="{% url 'home' %}" class="button secondary" style="margin-top: 2rem; max-width: 200px;">⬅ Back to
+        Dashboard</a>
 </div>
 {% endblock %}

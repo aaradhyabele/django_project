@@ -30,9 +30,14 @@ g_scaler = None
 g_model_trained = False
 g_feature_cols = ["amount", "transactions", "hour"]
 
+# Accuracy scores
+g_accuracy_lr = None
+g_accuracy_dt = None
+g_accuracy_rf = None
+
 def load_global_model():
-    """Lengths the model from disk if it exists."""
-    global g_lr, g_dt, g_rf, g_scaler, g_model_trained
+    """Loads the model from disk if it exists."""
+    global g_lr, g_dt, g_rf, g_scaler, g_model_trained, g_accuracy_lr, g_accuracy_dt, g_accuracy_rf
     if os.path.exists(MODEL_PATH):
         try:
             with open(MODEL_PATH, 'rb') as f:
@@ -41,6 +46,9 @@ def load_global_model():
                 g_dt = data.get('dt')
                 g_rf = data.get('rf')
                 g_scaler = data.get('scaler')
+                g_accuracy_lr = data.get('accuracy_lr', 0)
+                g_accuracy_dt = data.get('accuracy_dt', 0)
+                g_accuracy_rf = data.get('accuracy_rf', 0)
                 g_model_trained = True
                 print("Global model loaded successfully.")
         except Exception as e:
@@ -99,7 +107,7 @@ def user_logout(request):
 # ================= GLOBAL TRAINING VIEW =================
 @login_required
 def train_global_model(request):
-    global g_lr, g_dt, g_rf, g_scaler, g_model_trained
+    global g_lr, g_dt, g_rf, g_scaler, g_model_trained, g_accuracy_lr, g_accuracy_dt, g_accuracy_rf
     
     if request.method == 'POST' and 'train_csv' in request.FILES:
         try:
@@ -120,30 +128,40 @@ def train_global_model(request):
             X = df[g_feature_cols]
             y = df[target]
             
+            # Split data for training and testing
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            
             g_scaler = StandardScaler()
-            X_scaled = g_scaler.fit_transform(X)
+            X_train_scaled = g_scaler.fit_transform(X_train)
+            X_test_scaled = g_scaler.transform(X_test)
             
             # Train Logistic Regression
             g_lr = LogisticRegression()
-            g_lr.fit(X_scaled, y)
+            g_lr.fit(X_train_scaled, y_train)
+            g_accuracy_lr = round(accuracy_score(y_test, g_lr.predict(X_test_scaled)) * 100, 2)
             
             # Train Decision Tree
             g_dt = DecisionTreeClassifier()
-            g_dt.fit(X_scaled, y)
+            g_dt.fit(X_train_scaled, y_train)
+            g_accuracy_dt = round(accuracy_score(y_test, g_dt.predict(X_test_scaled)) * 100, 2)
             
             # Train Random Forest
             g_rf = RandomForestClassifier(n_estimators=100, random_state=42)
-            g_rf.fit(X_scaled, y)
+            g_rf.fit(X_train_scaled, y_train)
+            g_accuracy_rf = round(accuracy_score(y_test, g_rf.predict(X_test_scaled)) * 100, 2)
             
             g_model_trained = True
             
-            # Save to disk
+            # Save to disk (including accuracy scores)
             with open(MODEL_PATH, 'wb') as f:
                 pickle.dump({
                     'lr': g_lr,
                     'dt': g_dt,
                     'rf': g_rf,
-                    'scaler': g_scaler
+                    'scaler': g_scaler,
+                    'accuracy_lr': g_accuracy_lr,
+                    'accuracy_dt': g_accuracy_dt,
+                    'accuracy_rf': g_accuracy_rf
                 }, f)
                 
             messages.success(request, "Global Model Trained Successfully!")
@@ -222,6 +240,14 @@ def fraud_prediction(request):
                     final_decision = "Normal"
                     fraud_result = "Normal"
 
+                # Reason Logic
+                reasons = []
+                if amount > 10000: reasons.append("High Amount")
+                if transactions > 5: reasons.append("High Frequency")
+                if hour >= 22 or hour <= 5: reasons.append("Odd Hour")
+                
+                fraud_reason = "Multiple suspicious patterns" if not reasons else " & ".join(reasons[:2])
+
                 # === SAVE TO DB ===
                 TransactionRecord.objects.create(
                     amount=amount,
@@ -229,16 +255,21 @@ def fraud_prediction(request):
                     hour=hour,
                     fraud_result=fraud_result,
                     risk_level=risk_level,
-                    risk_score=risk_score
+                    risk_score=risk_score,
+                    fraud_reason=fraud_reason
                 )
 
                 context["result"] = {
                     "prediction_logistic": "Fraud" if pred_lr == 1 else "Normal",
                     "prediction_dt": "Fraud" if pred_dt == 1 else "Normal",
                     "prediction_rf": "Fraud" if pred_rf == 1 else "Normal",
+                    "accuracy_logistic": f"{g_accuracy_lr}%" if g_accuracy_lr else "N/A",
+                    "accuracy_dt": f"{g_accuracy_dt}%" if g_accuracy_dt else "N/A",
+                    "accuracy_rf": f"{g_accuracy_rf}%" if g_accuracy_rf else "N/A",
                     "risk_level": risk_level,
                     "final_decision": final_decision,
-                    "risk_score": risk_score
+                    "risk_score": risk_score,
+                    "fraud_reason": fraud_reason
                 }
 
             except Exception as e:
@@ -346,6 +377,26 @@ def fraud_analysis(request):
                 risk_score = record.get('fraud_prob', 0) # Use prob as base risk
                 record['risk_level'] = "High" if risk_score > 0.7 else "Medium" if risk_score > 0.4 else "Low"
 
+                # Reason Logic
+                reasons = []
+                amount = record.get('amount', 0)
+                transactions = record.get('transactions', 0)
+                hour = record.get('hour', 0)
+
+                if amount > 10000:
+                    reasons.append("High Amount")
+                if transactions > 5:
+                    reasons.append("High Frequency")
+                if hour >= 22 or hour <= 5:
+                    reasons.append("Odd Hour")
+
+                if not reasons:
+                    record['fraud_reason'] = "Multiple suspicious patterns"
+                elif len(reasons) == 1:
+                    record['fraud_reason'] = reasons[0]
+                else:
+                    record['fraud_reason'] = f"{reasons[0]} & {reasons[1]}"
+
             context["fraud_records"] = fraud_records
             request.session['fraud_data'] = fraud_records
 
@@ -365,7 +416,7 @@ def export_fraud_csv(request):
     response['Content-Disposition'] = 'attachment; filename="fraud_detected.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(['Amount', 'Transactions', 'Hour', 'Fraud Probability', 'Risk Level'])
+    writer.writerow(['Amount', 'Transactions', 'Hour', 'Fraud Probability', 'Risk Level', 'Reason'])
 
     for row in fraud_data:
         writer.writerow([
@@ -373,7 +424,8 @@ def export_fraud_csv(request):
             row.get('transactions'), 
             row.get('hour'), 
             row.get('fraud_prob'),
-            row.get('risk_level')
+            row.get('risk_level'),
+            row.get('fraud_reason')
         ])
 
     return response

@@ -1,29 +1,34 @@
 {% extends 'core/base.html' %}
-{% block title %}Register | Fraud Detection System{% endblock %}
+{% block title %}Register | FraudGuard AI{% endblock %}
+
+{% block training_widget %}{% endblock %}
 
 {% block content %}
-<div class="box">
-    <h2>User Registration</h2>
-    <p class="subtitle">Create a new account</p>
+<div class="box" style="text-align: center;">
+    <div style="font-size: 3rem; margin-bottom: 0.5rem;">👤</div>
+    <h2 style="margin-bottom: 0.25rem;">Create Account</h2>
+    <p class="subtitle">Sign up to get started with FraudGuard</p>
 
-    <form method="post">
+    <form method="post" style="text-align: left;">
         {% csrf_token %}
 
         <div class="form-group">
             <label>Username</label>
             {{ form.username }}
-            <small class="help-text">Required. Letters, digits only.</small>
+            <small class="help-text">Letters, digits and @/./+/-/_ only</small>
         </div>
 
         <div class="form-group">
             <label>Password</label>
             {{ form.password1 }}
-            <small class="help-text">Password must:</small>
-            <ul class="help-text type-list" style="padding-left: 20px; margin-top: 5px;">
-                <li>Be at least 8 characters</li>
-                <li>Not be too common</li>
-                <li>Not be entirely numeric</li>
-            </ul>
+            <div class="help-text" style="margin-top: 0.5rem;">
+                Password requirements:
+                <ul style="margin: 0.25rem 0 0 1.25rem; padding: 0;">
+                    <li>At least 8 characters</li>
+                    <li>Not too common</li>
+                    <li>Not entirely numeric</li>
+                </ul>
+            </div>
         </div>
 
         <div class="form-group">
@@ -34,7 +39,8 @@
 
         {% if form.errors %}
         <div class="error-message">
-            <ul style="padding-left: 20px;">
+            <strong>Please fix the following:</strong>
+            <ul style="margin: 0.5rem 0 0 1.25rem; padding: 0;">
                 {% for field in form %}
                 {% for error in field.errors %}
                 <li>{{ error }}</li>
@@ -47,11 +53,11 @@
         </div>
         {% endif %}
 
-        <button type="submit" class="button" style="margin-top: 20px;">Register</button>
+        <button type="submit" class="button" style="margin-top: 0.5rem;">Create Account →</button>
     </form>
 
     <div class="link-text">
-        Already registered? <a href="{% url 'login' %}">Login</a>
+        Already have an account? <a href="{% url 'login' %}">Sign in</a>
     </div>
 </div>
 {% endblock %}

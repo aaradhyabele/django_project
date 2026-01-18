@@ -2,45 +2,55 @@
 
 {% block title %}Dashboard | FraudGuard AI{% endblock %}
 
+{% block training_widget %}{% endblock %}
+
 {% block content %}
 
-<div class="header-section" style="text-align: center; margin-bottom: 3rem;">
-    <h1 style="margin-bottom: 0.5rem;">Fraud Detection Dashboard</h1>
-    <p class="subtitle">Secure, Fast, and Reliable Transaction Monitoring</p>
+<div class="header-section">
+    <h1>🏦 Fraud Detection Dashboard</h1>
+    <p class="subtitle">Secure, Fast, and Reliable Transaction Monitoring Powered by Machine Learning</p>
 </div>
 
 <div class="dashboard-grid">
 
     <!-- Predict Card -->
     <div class="card">
-        <h3>🔍 Quick Prediction</h3>
-        <p class="subtitle" style="font-size: 0.95rem; margin-bottom: 1.5rem;">Check single transactions for potential
-            fraud risk instantly using our ML engine.</p>
-        <a href="{% url 'predict' %}" class="button">Go to Predict</a>
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
+        <h3 style="margin-bottom: 0.5rem;">Quick Prediction</h3>
+        <p class="subtitle" style="font-size: 0.9rem; margin-bottom: 1.5rem; flex: 1;">
+            Analyze individual transactions for potential fraud risk using our ML engine.
+        </p>
+        <a href="{% url 'predict' %}" class="button">Get Started →</a>
     </div>
 
     <!-- Analysis Card -->
     <div class="card">
-        <h3>📊 Batch Analysis</h3>
-        <p class="subtitle" style="font-size: 0.95rem; margin-bottom: 1.5rem;">Upload transaction datasets for
-            comprehensive bulk analysis and visualization.</p>
-        <a href="{% url 'fraud_analysis' %}" class="button">Go to Analysis</a>
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📊</div>
+        <h3 style="margin-bottom: 0.5rem;">Batch Analysis</h3>
+        <p class="subtitle" style="font-size: 0.9rem; margin-bottom: 1.5rem; flex: 1;">
+            Upload transaction datasets for comprehensive bulk analysis and visualization.
+        </p>
+        <a href="{% url 'fraud_analysis' %}" class="button">Upload Dataset →</a>
     </div>
 
     <!-- Report Card -->
     <div class="card">
-        <h3>📑 Fraud Reports</h3>
-        <p class="subtitle" style="font-size: 0.95rem; margin-bottom: 1.5rem;">View history of detected fraudulent
-            transactions and export compliance reports.</p>
-        <a href="{% url 'report' %}" class="button">View Reports</a>
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📑</div>
+        <h3 style="margin-bottom: 0.5rem;">Transaction History</h3>
+        <p class="subtitle" style="font-size: 0.9rem; margin-bottom: 1.5rem; flex: 1;">
+            View history of analyzed transactions and export compliance reports.
+        </p>
+        <a href="{% url 'report' %}" class="button">View Reports →</a>
     </div>
 
     <!-- About Card -->
     <div class="card">
-        <h3>ℹ️ System Info</h3>
-        <p class="subtitle" style="font-size: 0.95rem; margin-bottom: 1.5rem;">Learn about the Random Forest & Logistic
-            Regression models powering this system.</p>
-        <a href="{% url 'about' %}" class="button secondary">About & Docs</a>
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">ℹ️</div>
+        <h3 style="margin-bottom: 0.5rem;">System Info</h3>
+        <p class="subtitle" style="font-size: 0.9rem; margin-bottom: 1.5rem; flex: 1;">
+            Learn about the ML models powering this fraud detection system.
+        </p>
+        <a href="{% url 'about' %}" class="button secondary">Learn More →</a>
     </div>
 
 </div>

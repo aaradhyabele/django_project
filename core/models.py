@@ -11,6 +11,7 @@ class TransactionRecord(models.Model):
     fraud_result = models.CharField(max_length=20) # "Fraud" or "Normal"
     risk_level = models.CharField(max_length=20)   # "High Risk", etc.
     risk_score = models.FloatField(default=0.0)
+    fraud_reason = models.CharField(max_length=255, blank=True, null=True)
     
     timestamp = models.DateTimeField(auto_now_add=True)
 
