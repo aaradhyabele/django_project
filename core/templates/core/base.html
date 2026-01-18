@@ -15,7 +15,7 @@
         rel="stylesheet">
 
     <!-- Main Stylesheet -->
-    <link rel="stylesheet" href="{% static 'core/style.css' %}">
+    <link rel="stylesheet" href="{% static 'core/style.css' %}?v=1.4">
     {% block extra_css %}{% endblock %}
 </head>
 
@@ -23,7 +23,7 @@
     <!-- Navigation -->
     <nav class="navbar">
         <a href="{% url 'home' %}" class="brand">
-            🏦 FraudGuard
+            FraudGuard
         </a>
 
         <div class="nav-links">
