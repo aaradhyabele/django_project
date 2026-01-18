@@ -14,7 +14,7 @@
             <label>Select System Role</label>
             <select name="role" required>
                 {% for code, label in roles %}
-                <option value="{{ code }}" {% if managed_user.profile.role==code %}selected{% endif %}>
+                <option value="{{ code }}" {% if managed_user.profile.role == code %}selected{% endif %}>
                     {{ label }}
                 </option>
                 {% endfor %}
