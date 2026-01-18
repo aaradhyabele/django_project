@@ -40,9 +40,7 @@
                     <td>{{ row.risk_score|floatformat:2 }}</td>
                     <td>
                         {% if row.fraud_result == "Fraud" %}
-                        <span class="badge warning"
-                            style="background: rgba(245, 158, 11, 0.1); color: #b45309; border: 1px solid #fcd34d;">{{
-                            row.fraud_reason|default:"N/A" }}</span>
+                        <span class="badge reason">{{ row.fraud_reason|default:"N/A" }}</span>
                         {% else %}
                         <span class="badge normal">-</span>
                         {% endif %}

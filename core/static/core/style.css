@@ -600,6 +600,12 @@ tbody tr:last-child td {
     color: var(--warning-text);
 }
 
+.badge.reason {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+    border: 1px solid #fcd34d;
+}
+
 /* ========================================
    RESULT CARDS
    ======================================== */

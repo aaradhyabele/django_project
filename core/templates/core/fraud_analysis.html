@@ -125,11 +125,7 @@
                         <span class="badge normal">Low</span>
                         {% endif %}
                     </td>
-                    <td>
-                        <span class="badge warning"
-                            style="background: rgba(245, 158, 11, 0.1); color: #b45309; border: 1px solid #fcd34d;">{{
-                            row.fraud_reason|default:"N/A" }}</span>
-                    </td>
+                    <td><span class="badge reason">{{ row.fraud_reason|default:"N/A" }}</span></td>
                 </tr>
                 {% endfor %}
             </tbody>
