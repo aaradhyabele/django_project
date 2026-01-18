@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+
+{% block title %}User Management | FraudGuard AI{% endblock %}
+
+{% block content %}
+<div class="box wide">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+        <div>
+            <h2>👥 User Management</h2>
+            <p class="subtitle">Control roles and system access for registered analysts and officers</p>
+        </div>
+        <a href="{% url 'user_create' %}" class="button btn-inline">➕ Create New User</a>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Current Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td>{{ user.email|default:"N/A" }}</td>
+                    <td>
+                        <span
+                            class="badge {% if user.profile.role == 'ADMIN' %}fraud{% elif user.profile.role == 'USER' %}normal{% else %}warning{% endif %}">
+                            {{ user.profile.get_role_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if user.is_active %}
+                        <span class="badge normal">Active</span>
+                        {% else %}
+                        <span class="badge fraud"
+                            style="background: rgba(225, 29, 72, 0.1); color: #e11d48;">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'assign_role' user.id %}" class="button btn-inline"
+                            style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+                            ⚙️ Manage
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">No users registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

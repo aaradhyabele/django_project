@@ -1,0 +1,32 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Create User | FraudGuard AI{% endblock %}
+
+{% block content %}
+<div class="box">
+    <h2>👤 Create New User</h2>
+    <p class="subtitle">Directly create a new user account for system analysts or officers</p>
+
+    <form method="post" class="card" style="padding: 2.5rem; background: var(--glass-surface-light);">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="form-group">
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+            <p class="help-text">{{ field.help_text }}</p>
+            {% endif %}
+            {% for error in field.errors %}
+            <p class="error-message" style="margin: 0.5rem 0 0 0; padding: 0.25rem;">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="button">Create Account</button>
+            <a href="{% url 'user_list' %}" class="button secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

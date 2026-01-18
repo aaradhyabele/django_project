@@ -53,6 +53,20 @@
         <a href="{% url 'about' %}" class="button secondary">Learn More →</a>
     </div>
 
+    {% if user.is_authenticated %}
+    {% if user.is_superuser or user.profile.role == 'ADMIN' %}
+    <!-- Admin Card -->
+    <div class="card" style="border-top: 4px solid var(--primary-light);">
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">👥</div>
+        <h3 style="margin-bottom: 0.5rem;">Admin Control</h3>
+        <p class="subtitle" style="font-size: 0.9rem; margin-bottom: 1.5rem; flex: 1;">
+            Manage user roles, access levels, and account statuses.
+        </p>
+        <a href="{% url 'user_list' %}" class="button" style="background: var(--primary-dark);">Manage Users →</a>
+    </div>
+    {% endif %}
+    {% endif %}
+
 </div>
 
 {% endblock %}

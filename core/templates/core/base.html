@@ -32,15 +32,23 @@
             <a href="{% url 'fraud_analysis' %}" class="nav-link">Analysis</a>
             <a href="{% url 'report' %}" class="nav-link">Reports</a>
             <a href="{% url 'about' %}" class="nav-link">About</a>
+            {% if user.is_authenticated %}
+            {% if user.is_superuser or user.profile.role == 'ADMIN' %}
+            <a href="{% url 'user_list' %}" class="nav-link" style="color: var(--primary-light);">Users</a>
+            {% endif %}
+            {% endif %}
         </div>
 
         <div class="auth-buttons">
             {% if user.is_authenticated %}
             <span class="nav-link" style="cursor: default;">👤 {{ user.username }}</span>
-            <a href="{% url 'logout' %}" class="button secondary btn-inline"
-                style="padding: 0.5rem 1rem; font-size: 0.85rem;">
-                Logout
-            </a>
+            <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="button secondary btn-inline"
+                    style="padding: 0.5rem 1rem; font-size: 0.85rem; width: auto; cursor: pointer;">
+                    Logout
+                </button>
+            </form>
             {% else %}
             <a href="{% url 'login' %}" class="button btn-inline" style="padding: 0.5rem 1.25rem; font-size: 0.85rem;">
                 Sign In
