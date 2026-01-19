@@ -219,8 +219,8 @@ def fraud_prediction(request):
 
                 # Risk Score calculation (Simplified/Heuristic)
                 risk_score = 0
-                if amount > 1000: risk_score += 0.3
-                if transactions > 2: risk_score += 0.2
+                if amount > 10000: risk_score += 0.4
+                if transactions > 5: risk_score += 0.3
                 if hour >= 22 or hour <= 5: risk_score += 0.3
                 
                 if pred_rf == 1: risk_score += 0.2
@@ -246,7 +246,14 @@ def fraud_prediction(request):
                 if transactions > 5: reasons.append("High Frequency")
                 if hour >= 22 or hour <= 5: reasons.append("Odd Hour")
                 
-                fraud_reason = "Multiple suspicious patterns" if not reasons else " & ".join(reasons[:2])
+                # Enhanced Reason Logic
+                if not reasons:
+                    if pred_rf == 1 and risk_level != "Low Risk":
+                        fraud_reason = "Model Flagged Suspicious"
+                    else:
+                        fraud_reason = "None"
+                else:
+                    fraud_reason = " & ".join(reasons)
 
                 # === SAVE TO DB ===
                 TransactionRecord.objects.create(
