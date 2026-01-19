@@ -45,8 +45,10 @@ class RoleBasedAccessMiddleware:
                 messages.error(request, "Access denied: Compliance/Auditor role required.")
                 return redirect('home')
 
-        # User Management → Allow the app's own decorators to handle it
+        # User Management → Admins only
         if path.startswith('/user-management/'):
-             return self.get_response(request)
+            if role != Role.ADMIN:
+                messages.error(request, "Access denied: Admin role required.")
+                return redirect('home')
 
         return self.get_response(request)

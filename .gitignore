@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Database
+db.sqlite3
+
+# Data files
+*.csv
+
+# Media files
+media/
